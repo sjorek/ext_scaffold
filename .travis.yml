@@ -3,17 +3,34 @@ language: php
 php:
   - 7.0
   - 7.1
+  - 7.2
+  # - nightly
 
 matrix:
   exclude:
-    - php: 5.5
+    # - php: 7.0
+    #   env: TYPO3_VERSION="^9.0"
+    - php: 7.0
+      env: TYPO3_VERSION="^9.1"
+    # - php: 7.1
+    #   env: TYPO3_VERSION="^9.0"
+    - php: 7.1
+      env: TYPO3_VERSION="^9.1"
+    - php: nightly
       env: TYPO3_VERSION="^8.7"
-    - php: 5.6
-      env: TYPO3_VERSION="^8.7"
+  allow_failures:
+    - php: nightly
 
 env:
-  - TYPO3_VERSION="^7.6"
-  - TYPO3_VERSION="^8.7"
+  global:
+    - TYPO3_PATH_ROOT=$TRAVIS_BUILD_DIR/.Build
+    - TYPO3_UNIT_TESTS=$TYPO3_PATH_ROOT/vendor/typo3/testing-framework/Resources/Core/Build/UnitTests.xml
+    - TYPO3_FUNCTIONAL_TESTS=$TYPO3_PATH_ROOT/vendor/typo3/testing-framework/Resources/Core/Build/FunctionalTests.xml
+    - PATH=$TYPO3_PATH_ROOT/vendor/bin:$PATH
+  matrix:
+    - TYPO3_VERSION="^8.7"
+    # - TYPO3_VERSION="^9.0"
+    - TYPO3_VERSION="^9.1"
 
 sudo: false
 
@@ -27,15 +44,17 @@ cache:
     - $HOME/.composer/cache
 
 install:
+  - composer diagnose || true
+  - composer validate
   - composer require-typo3-version "$TYPO3_VERSION"
   - git checkout .
-  - export TYPO3_PATH_ROOT=$PWD/.Build/public
+  - composer check-platform-reqs
 
 script:
   - >
     echo;
     echo "Running unit tests";
-    .Build/vendor/bin/phpunit -c .Build/vendor/nimut/testing-framework/res/Configuration/UnitTests.xml Tests/Unit/
+    phpunit -c $TYPO3_UNIT_TESTS Tests/Unit/
 
   - >
     echo;
@@ -48,4 +67,13 @@ script:
     export typo3DatabaseHost="localhost";
     export typo3DatabaseUsername="root";
     export typo3DatabasePassword="";
-    find 'Tests/Functional' -wholename '*Test.php' | parallel --gnu 'echo; echo "Running functional test suite {}"; .Build/vendor/bin/phpunit -c .Build/vendor/nimut/testing-framework/res/Configuration/FunctionalTests.xml {}'
+    find 'Tests/Functional' -wholename '*Test.php' | parallel --gnu 'echo; echo "Running functional test suite {}"; phpunit -c $TYPO3_FUNCTIONAL_TESTS {}'
+
+notifications:
+  email:
+    on_success: change
+    on_failure: change
+  slack:
+    on_success: always
+    on_failure: always
+    secure: fmuLb0WcEPOanMKgzvWcRGMSVmyayIXp4h4mzkf0LJ9h2/K3+UeBgP9gTGK8UW8zRAxRyKRDbvYLvBaQvi9b1dwplwbPcM2110O3wTFnQiEhY5XSll75omgxUmjREiRccB5qRj/MdVbB+m6+1jK07fHiXcbu8HIRG9G/CZ0VFS3BfA8sIjVt/K3jn33z5FQBFzsgoG0HlIQV3vazmruyv0FJH5xHaFZlvlGlRlCvQCPizkwlwNnZrKVs2KVxXeVwtIuhTmOi/A54qQuyXqTjT1HaJz7tqu7syDyLBIiBWWwkqF+pxnYQ6Q9GtpzE85WKNOTeOogUjfneGhQAI8akzzOsiJ03qGqpduhjm/bkkFe8pNCyO5ySKK0qhzQMawM53YuBsngedQvAKZ/3g6oYjDwhd7QUbE/utlKT6Eu/NYnCVVh0BnpfnvDUWRGgG9ySH2s11v31EhsKrk5+Bms1xe40zhR+jMGt68YAfvPFQFWvMRfket3j4aND2TZB54sFC3C5ccXgSbuYoXIVjXfPeiGmi+bAcXvaqPpif13N3CQibi8NHL5jN9J0Blb6VaAgztYFcYBHKw6FPhvYKrAt53HFXftfyY4yCjuJh49Nxs4yJuuQJ05RH0fWXXTcrq+aLKUzc2G1v+nGCKT1c4HJYvq8ot/96OiY3baQj1qLKIM=

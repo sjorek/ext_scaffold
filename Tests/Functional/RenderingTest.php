@@ -27,9 +27,9 @@ namespace Helhum\ExtScaffold\Tests\Functional;
  *  This copyright notice MUST APPEAR in all copies of the script!
  ***************************************************************/
 
-use Nimut\TestingFramework\Http\Response;
-use Nimut\TestingFramework\TestCase\FunctionalTestCase;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
+use TYPO3\TestingFramework\Core\Functional\Framework\Frontend\Response;
+use TYPO3\TestingFramework\Core\Functional\FunctionalTestCase;
 
 /**
  * Class RenderingTest
@@ -85,21 +85,22 @@ class RenderingTest extends FunctionalTestCase
         }
 
         $arguments = array(
-            'documentRoot' => $this->getInstancePath(),
+            'documentRoot' => getenv('TYPO3_PATH_ROOT'),
             'requestUrl' => $requestUrl,
         );
 
-        $template = new \Text_Template('ntf://Frontend/Request.tpl');
+        $vendor = ORIGINAL_ROOT . '/vendor/';
+        $template = new \Text_Template($vendor . 'typo3/testing-framework/Resources/Core/Functional/Fixtures/Frontend/request.tpl');
         $template->setVar(
             array(
                 'arguments' => var_export($arguments, true),
-                'originalRoot' => ORIGINAL_ROOT,
-                'ntfRoot' => __DIR__ . '/../../.Build/vendor/nimut/testing-framework/',
+                'vendorPath' => $vendor,
             )
         );
 
-        $php = \PHPUnit_Util_PHP::factory();
+        $php = \PHPUnit\Util\PHP\AbstractPhpProcess::factory();
         $response = $php->runJob($template->render());
+
         $result = json_decode($response['stdout'], true);
 
         if ($result === null) {

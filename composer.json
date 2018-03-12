@@ -1,7 +1,7 @@
 {
     "name": "helhum/ext-scaffold",
     "type": "typo3-cms-extension",
-    "description": "Extension skeleton for TYPO3 7 and 8",
+    "description": "Extension skeleton for TYPO3 8 and 9",
     "keywords": [
         "TYPO3",
         "extension",
@@ -19,15 +19,15 @@
             "homepage": "http://helhum.io"
         }
     ],
-    "license": "GPL-2.0+",
+    "license": "GPL-2.0-or-later",
     "require": {
-        "typo3/cms-core": "^7.6.23 || ^8.7.9",
-        "typo3/cms-fluid": "^7.6.23 || ^8.7.9",
-        "typo3/cms-frontend": "^7.6.23 || ^8.7.9"
+        "typo3/cms-core": "^8.7.9 || ^9.1",
+        "typo3/cms-fluid": "^8.7.9 || ^9.1",
+        "typo3/cms-frontend": "^8.7.9 || ^9.1"
     },
     "require-dev": {
-        "nimut/testing-framework": "^2.0",
-        "helhum/typo3-composer-setup": "^0.5.1"
+        "helhum/typo3-composer-setup": "^0.5.1",
+        "typo3/testing-framework": "^1.2.2 || ^2.0.3 || ^3.0.0"
     },
     "autoload": {
         "psr-4": {
@@ -48,12 +48,17 @@
     },
     "scripts": {
         "require-typo3-version": [
+            "@remove-composer-lock",
             "@php -r '$conf=json_decode(file_get_contents(__DIR__.\"/composer.json\"),true);$conf[\"require\"][\"typo3/cms-core\"]=$_SERVER[\"argv\"][1];file_put_contents(__DIR__.\"/composer.json\",json_encode($conf,JSON_UNESCAPED_SLASHES|JSON_PRETTY_PRINT).chr(10));'",
-            "@composer install"
+            "@composer install",
+            "@php -r '$p=@reset(array_filter(json_decode(shell_exec(PHP_BINARY.\" \".getenv(\"COMPOSER_BINARY\").\" show --format=json\"))->installed,function($p){return $p->name===\"typo3/cms-core\";}));$v=ltrim($p->version,\"v\");if(version_compare($v,\"9.1.0\",\">=\")&&version_compare($v, \"9.2.0\", \"<\")){system(sprintf(\"%s %s require --dev typo3/testing-framework:^2.0.3\",escapeshellcmd(PHP_BINARY),escapeshellarg(getenv(\"COMPOSER_BINARY\"))));}'"
         ],
         "link-extension": [
-            "@php -r 'is_dir($extFolder=__DIR__.\"/.Build/public/typo3conf/ext/\") || mkdir($extFolder, 0777, true);'",
-            "@php -r 'file_exists($extFolder=__DIR__.\"/.Build/public/typo3conf/ext/ext_scaffold\") || symlink(__DIR__,$extFolder);'"
+            "@php -r 'is_dir($extFolder=__DIR__.\"/.Build/typo3conf/ext/\") || mkdir($extFolder, 0777, true);'",
+            "@php -r 'file_exists($extFolder=__DIR__.\"/.Build/typo3conf/ext/ext_scaffold\") || symlink(__DIR__,$extFolder);'"
+        ],
+        "remove-composer-lock": [
+            "@php -r 'file_exists($file=__DIR__.\"/composer.lock\") && unlink($file);'"
         ],
         "post-autoload-dump": [
             "@link-extension"
@@ -61,11 +66,11 @@
     },
     "extra": {
         "branch-alias": {
-            "dev-master": "1.0.x-dev"
+            "dev-master": "feature-add-support-for-typo3-9.x"
         },
         "typo3/cms": {
             "cms-package-dir": "{$vendor-dir}/typo3/cms",
-            "web-dir": ".Build/public"
+            "web-dir": ".Build"
         }
     }
 }

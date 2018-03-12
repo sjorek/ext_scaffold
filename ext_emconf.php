@@ -1,7 +1,7 @@
 <?php
 $EM_CONF[$_EXTKEY] = array(
   'title' => 'Scaffold extension',
-  'description' => 'Extension skeleton for TYPO3 7 and 8',
+  'description' => 'Extension skeleton for TYPO3 8 and 9',
   'category' => 'Example Extensions',
   'author' => 'Helmut Hummel',
   'author_email' => 'info@helhum.io',
@@ -21,7 +21,7 @@ $EM_CONF[$_EXTKEY] = array(
   array(
     'depends' =>
     array(
-      'typo3' => '7.6.0-8.7.99',
+      'typo3' => '8.7.9-9.1.99',
     ),
     'conflicts' =>
     array(
